@@ -1,0 +1,40 @@
+application:
+  # cluster id if not set the server will run as a independent server, and id will be set as independent_Project.key()
+  id: yt
+  # cluster name default as the cluster id
+  name: yt
+  # internal server ip, other can access, 0.0.0.0
+  internalIp: 127.0.0.1
+  # print cli log or not
+  debug: true
+
+# log config
+log:
+  # log dir
+  dir:
+  # max size (M) default:  100
+  maxSize: 100
+  # max backup  default:  5
+  maxBackup: 5
+  # max age (day)  default:  5
+  maxAge: 5
+  # level, default=info,  debug,info, warn,error...
+  level: info
+  # trace level, default=error,  debug,info, warn,error...
+  traceLevel: error
+
+# register config
+register:
+  # driver, etcd, local, ....
+  driver: etcd
+  # etcd endpoints, etcd:2379
+  endpoints: 127.0.0.1:2379
+  # operate timeout
+  timeout: 5
+  # register ttl
+  regTtl: 5
+
+# server
+server:
+  # port
+  port: 80
