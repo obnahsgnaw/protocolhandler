@@ -6,10 +6,12 @@ import (
 	"github.com/obnahsgnaw/sockethandler"
 	"github.com/obnahsgnaw/sockethandler/service/action"
 	"github.com/obnahsgnaw/socketutil/codec"
+	"strconv"
 	"strings"
 )
 
 func Load(s *sockethandler.Handler, modelNames string, actionId int) {
+	_provider.s = s
 	for _, modelName := range strings.Split(modelNames, ",") {
 		if modelName != "" {
 			s.Listen(codec.Action{
@@ -22,12 +24,26 @@ func Load(s *sockethandler.Handler, modelNames string, actionId int) {
 				resp := &handlerv1.RawResponse{}
 				data = resp
 				if rq.ActionId == 0 {
-					respAct, resp.Data, err = Dispatcher().dispatchInput(rq.Data)
+					respAct, resp.Data, err = _dispatcher.dispatchInput(ctx, req, rq.Data)
+					if err != nil {
+						s.Logger().Error("transfer input failed, err=" + err.Error())
+					} else {
+						s.Logger().Debug("transfer input:" + string(rq.Data) + ",out:action=" + respAct.String())
+					}
 				} else {
-					resp.Data, err = Dispatcher().dispatchOutput(codec.ActionId(rq.ActionId), rq.Data)
+					resp.Data, err = _dispatcher.dispatchOutput(ctx, req, codec.ActionId(rq.ActionId), rq.Data)
+					if err != nil {
+						s.Logger().Error("transfer output failed, err=" + err.Error())
+					} else {
+						s.Logger().Debug("transfer output:" + string(rq.Data) + ",out:action=" + strconv.Itoa(int(rq.ActionId)))
+					}
 				}
 				return
 			})
 		}
 	}
+}
+
+func Register(cb func(*Provider)) {
+	cb(_provider)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/obnahsgnaw/application/pkg/url"
 	"github.com/obnahsgnaw/protocolhandler/application/register"
 	"github.com/obnahsgnaw/protocolhandler/config"
+	_ "github.com/obnahsgnaw/protocolhandler/internal"
 	"github.com/obnahsgnaw/rpc"
 	"github.com/obnahsgnaw/sockethandler"
 	"github.com/obnahsgnaw/sockethandler/sockettype"
