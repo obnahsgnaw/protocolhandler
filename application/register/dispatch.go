@@ -38,8 +38,12 @@ func init() {
 	}
 }
 
-// act=0 则直接响应， 否则会转发给实际的action handler
-func (d *Dispatch) dispatchInput(ctx context.Context, rq *action.HandlerReq, rawIn []byte) (act codec.Action, actData []byte, err error) {
+func Dispatcher() *Dispatch {
+	return _dispatcher
+}
+
+// DispatchInput act=0 则直接响应， 否则会转发给实际的action handler
+func (d *Dispatch) DispatchInput(ctx context.Context, rq *action.HandlerReq, rawIn []byte) (act codec.Action, actData []byte, err error) {
 	interAction, rawOut, transErr := d.inputTransfer(ctx, rq, rawIn)
 	if transErr != nil {
 		err = transErr
@@ -55,8 +59,8 @@ func (d *Dispatch) dispatchInput(ctx context.Context, rq *action.HandlerReq, raw
 	return
 }
 
-// 转化实际action handler的数据成原始数据
-func (d *Dispatch) dispatchOutput(ctx context.Context, rq *action.HandlerReq, act codec.ActionId, actData []byte) (rawOut []byte, err error) {
+// DispatchOutput 转化实际action handler的数据成原始数据
+func (d *Dispatch) DispatchOutput(ctx context.Context, rq *action.HandlerReq, act codec.ActionId, actData []byte) (rawOut []byte, err error) {
 	if handler, ok := d.outputTransfer[act]; ok {
 		ptr := handler.structure()
 		if err = d.dataBuilder.Unpack(actData, ptr); err != nil {

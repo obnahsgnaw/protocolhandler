@@ -24,14 +24,14 @@ func Load(s *sockethandler.Handler, modelNames string, actionId int) {
 				resp := &handlerv1.RawResponse{}
 				data = resp
 				if rq.ActionId == 0 {
-					respAct, resp.Data, err = _dispatcher.dispatchInput(ctx, req, rq.Data)
+					respAct, resp.Data, err = _dispatcher.DispatchInput(ctx, req, rq.Data)
 					if err != nil {
 						s.Logger().Error("transfer input failed, err=" + err.Error())
 					} else {
 						s.Logger().Debug("transfer input:" + string(rq.Data) + ",out:action=" + respAct.String())
 					}
 				} else {
-					resp.Data, err = _dispatcher.dispatchOutput(ctx, req, codec.ActionId(rq.ActionId), rq.Data)
+					resp.Data, err = _dispatcher.DispatchOutput(ctx, req, codec.ActionId(rq.ActionId), rq.Data)
 					if err != nil {
 						s.Logger().Error("transfer output failed, err=" + err.Error())
 					} else {
