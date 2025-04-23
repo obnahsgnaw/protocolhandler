@@ -16,7 +16,6 @@ import (
 	"github.com/obnahsgnaw/sockethandler/service/action"
 	"github.com/obnahsgnaw/socketutil/codec"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -28,63 +27,59 @@ var (
 
 func BindToGateway(s *socketgateway.Server) {
 	validate()
-	for _, modelName := range strings.Split(config.ModelNames, ",") {
-		if modelName != "" {
-			act := codec.Action{Id: config.ActionId, Name: "raw:" + modelName}
-			s.ActionManager().RegisterHandlerAction(act, func() codec.DataPtr {
-				return &handlerv1.RawRequest{}
-			}, func(c socket.Conn, data codec.DataPtr) (respAction codec.Action, respData codec.DataPtr) {
-				var err error
-				rq := data.(*handlerv1.RawRequest)
-				resp := &handlerv1.RawResponse{}
-				data = resp
+	act := codec.Action{Id: config.ActionId, Name: "raw:" + config.ModelNames}
+	s.ActionManager().RegisterHandlerAction(act, func() codec.DataPtr {
+		return &handlerv1.RawRequest{}
+	}, func(c socket.Conn, data codec.DataPtr) (respAction codec.Action, respData codec.DataPtr) {
+		var err error
+		rq := data.(*handlerv1.RawRequest)
+		resp := &handlerv1.RawResponse{}
+		data = resp
 
-				ctx, cl := context.WithTimeout(context.Background(), time.Second)
-				defer cl()
+		ctx, cl := context.WithTimeout(context.Background(), time.Second)
+		defer cl()
 
-				var u *action.User
-				if c.Context().Authed() {
-					u = &action.User{
-						Id:   uint32(int(c.Context().User().Id)),
-						Name: c.Context().User().Name,
-						Attr: c.Context().User().Attr,
-					}
-					if u.Attr == nil {
-						u.Attr = make(map[string]string)
-					}
-				}
-				var target *action.Target
-				if c.Context().Authentication() != nil {
-					target = &action.Target{
-						Type:     c.Context().Authentication().Type,
-						Id:       c.Context().Authentication().Id,
-						Master:   c.Context().Authentication().Master,
-						Cid:      c.Context().Authentication().Cid,
-						Uid:      c.Context().Authentication().Uid,
-						Protocol: c.Context().Authentication().Protocol,
-					}
-				}
-				req := action.NewHandlerReq(s.Rpc().Host().String(), act, int64(c.Fd()), u, data, c.Context().IdMap(), target)
-
-				if rq.ActionId == 0 {
-					respAction, resp.Data, err = register.Dispatcher().DispatchInput(ctx, req, rq.Data)
-					if err != nil {
-						s.Logger().Error("transfer input failed, err=" + err.Error())
-					} else {
-						s.Logger().Debug("transfer input:" + string(rq.Data) + ",out:action=" + respAction.String())
-					}
-				} else {
-					resp.Data, err = register.Dispatcher().DispatchOutput(ctx, req, codec.ActionId(rq.ActionId), rq.Data)
-					if err != nil {
-						s.Logger().Error("transfer output failed, err=" + err.Error())
-					} else {
-						s.Logger().Debug("transfer output:" + string(rq.Data) + ",out:action=" + strconv.Itoa(int(rq.ActionId)))
-					}
-				}
-				return
-			})
+		var u *action.User
+		if c.Context().Authed() {
+			u = &action.User{
+				Id:   uint32(int(c.Context().User().Id)),
+				Name: c.Context().User().Name,
+				Attr: c.Context().User().Attr,
+			}
+			if u.Attr == nil {
+				u.Attr = make(map[string]string)
+			}
 		}
-	}
+		var target *action.Target
+		if c.Context().Authentication() != nil {
+			target = &action.Target{
+				Type:     c.Context().Authentication().Type,
+				Id:       c.Context().Authentication().Id,
+				Master:   c.Context().Authentication().Master,
+				Cid:      c.Context().Authentication().Cid,
+				Uid:      c.Context().Authentication().Uid,
+				Protocol: c.Context().Authentication().Protocol,
+			}
+		}
+		req := action.NewHandlerReq(s.Rpc().Host().String(), act, int64(c.Fd()), u, data, c.Context().IdMap(), target)
+
+		if rq.ActionId == 0 {
+			respAction, resp.Data, err = register.Dispatcher().DispatchInput(ctx, req, rq.Data)
+			if err != nil {
+				s.Logger().Error("transfer input failed, err=" + err.Error())
+			} else {
+				s.Logger().Debug("transfer input:" + string(rq.Data) + ",out:action=" + respAction.String())
+			}
+		} else {
+			resp.Data, err = register.Dispatcher().DispatchOutput(ctx, req, codec.ActionId(rq.ActionId), rq.Data)
+			if err != nil {
+				s.Logger().Error("transfer output failed, err=" + err.Error())
+			} else {
+				s.Logger().Debug("transfer output:" + string(rq.Data) + ",out:action=" + strconv.Itoa(int(rq.ActionId)))
+			}
+		}
+		return
+	})
 }
 
 func BindToHandler(s *sockethandler.Handler) {
