@@ -55,7 +55,6 @@ func BindToGateway(s *socketgateway.Server) {
 			target = &action.Target{
 				Type:     c.Context().Authentication().Type,
 				Id:       c.Context().Authentication().Id,
-				Master:   c.Context().Authentication().Master,
 				Cid:      c.Context().Authentication().Cid,
 				Uid:      c.Context().Authentication().Uid,
 				Protocol: c.Context().Authentication().Protocol,
