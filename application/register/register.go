@@ -21,7 +21,7 @@ func Load(s *sockethandler.Handler, modelNames string, actionId int) {
 		resp := &handlerv1.RawResponse{}
 		data = resp
 		if rq.ActionId == 0 {
-			respAct, resp.Data, err = _dispatcher.DispatchInput(ctx, req, rq.Data)
+			respAct, resp.Data, resp.SubActions, err = _dispatcher.DispatchInput(ctx, req, rq.Data)
 			if err != nil {
 				s.Logger().Error("transfer input failed, err=" + err.Error())
 			} else {
