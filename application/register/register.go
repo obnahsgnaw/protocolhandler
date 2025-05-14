@@ -16,21 +16,22 @@ func Load(s *sockethandler.Handler, modelNames string, actionId int) {
 		Name: "raw:" + modelNames,
 	}, func() codec.DataPtr {
 		return &handlerv1.RawRequest{}
-	}, func(ctx context.Context, req *action.HandlerReq) (respAct codec.Action, data codec.DataPtr, err error) {
+	}, func(ctx context.Context, req *action.HandlerReq) (respAct codec.Action, data codec.DataPtr, _ error) {
 		rq := req.Data.(*handlerv1.RawRequest)
 		resp := &handlerv1.RawResponse{}
 		data = resp
+		var err error
 		if rq.ActionId == 0 {
 			respAct, resp.Data, resp.SubActions, err = _dispatcher.DispatchInput(ctx, req, rq.Data)
 			if err != nil {
-				s.Logger().Error("transfer input failed, err=" + err.Error())
+				s.Logger().Warn("transfer input failed, err=" + err.Error())
 			} else {
 				s.Logger().Debug("transfer input:" + string(rq.Data) + ",out:action=" + respAct.String())
 			}
 		} else {
 			resp.Data, err = _dispatcher.DispatchOutput(ctx, req, codec.ActionId(rq.ActionId), rq.Data)
 			if err != nil {
-				s.Logger().Error("transfer output failed, err=" + err.Error())
+				s.Logger().Warn("transfer output failed, err=" + err.Error())
 			} else {
 				s.Logger().Debug("transfer output:" + string(rq.Data) + ",out:action=" + strconv.Itoa(int(rq.ActionId)))
 			}
