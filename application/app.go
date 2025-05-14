@@ -63,7 +63,7 @@ func BindToGateway(s *socketgateway.Server) {
 		req := action.NewHandlerReq(s.Rpc().Host().String(), act, int64(c.Fd()), u, data, c.Context().IdMap(), target)
 
 		if rq.ActionId == 0 {
-			respAction, resp.Data, err = register.Dispatcher().DispatchInput(ctx, req, rq.Data)
+			respAction, resp.Data, resp.SubActions, err = register.Dispatcher().DispatchInput(ctx, req, rq.Data)
 			if err != nil {
 				s.Logger().Error("transfer input failed, err=" + err.Error())
 			} else {

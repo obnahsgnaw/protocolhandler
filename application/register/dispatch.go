@@ -3,9 +3,11 @@ package register
 import (
 	"context"
 	"errors"
+	handlerv1 "github.com/obnahsgnaw/socketapi/gen/handler/v1"
 	"github.com/obnahsgnaw/sockethandler/service/action"
 	"github.com/obnahsgnaw/socketutil/codec"
 	"google.golang.org/protobuf/proto"
+	"strconv"
 )
 
 type Dispatch struct {
@@ -15,8 +17,14 @@ type Dispatch struct {
 }
 
 type InterAction struct {
-	Action codec.Action
-	Data   proto.Message
+	Action     codec.Action
+	Data       proto.Message
+	SubActions []*SubAction
+}
+type SubAction struct {
+	target   string
+	ActionId codec.ActionId
+	Data     proto.Message
 }
 type outHandler struct {
 	structure action.DataStructure
@@ -43,7 +51,7 @@ func Dispatcher() *Dispatch {
 }
 
 // DispatchInput act=0 则直接响应， 否则会转发给实际的action handler
-func (d *Dispatch) DispatchInput(ctx context.Context, rq *action.HandlerReq, rawIn []byte) (act codec.Action, actData []byte, err error) {
+func (d *Dispatch) DispatchInput(ctx context.Context, rq *action.HandlerReq, rawIn []byte) (act codec.Action, actData []byte, subActions []*handlerv1.SubAction, err error) {
 	interAction, rawOut, transErr := d.inputTransfer(ctx, rq, rawIn)
 	if transErr != nil {
 		err = transErr
@@ -56,6 +64,22 @@ func (d *Dispatch) DispatchInput(ctx context.Context, rq *action.HandlerReq, raw
 	}
 	act = interAction.Action
 	actData, err = d.dataBuilder.Pack(interAction.Data)
+	if err != nil {
+		err = errors.New("pack data failed: " + err.Error())
+		return
+	}
+	for _, subAction := range interAction.SubActions {
+		subData, subErr := d.dataBuilder.Pack(subAction.Data)
+		if subErr != nil {
+			err = errors.New("sub action[" + strconv.Itoa(int(subAction.ActionId)) + "] pack data failed: " + subErr.Error())
+			return
+		}
+		subActions = append(subActions, &handlerv1.SubAction{
+			ActionId: uint32(subAction.ActionId),
+			Data:     subData,
+			Target:   subAction.target,
+		})
+	}
 	return
 }
 
